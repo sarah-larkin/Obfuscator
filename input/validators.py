@@ -18,13 +18,21 @@ class ObfuscationRequest:
         self.__file_details = self._extract_and_validate_file_details(verified_input)
         self.__fields = self._extract_and_validate_fields(verified_input)
 
+    @property
+    def file_details(self): 
+        return self.__file_details
+    
+    @property
+    def fields(self): 
+        return self.__fields
+
     def _load_and_validate_json(self, input_json): 
         try:
             data = json.loads(input_json)
 
         # if not valid json string:
         except TypeError as err:
-            logging.error(f"invalid JSON: {err}")
+            logging.error(f"invalid input JSON type: {err}")
             raise
 
         # invalid json syntax
@@ -100,7 +108,8 @@ class ObfuscationRequest:
             "File_Name": file_name,
             "File_Type": file_type,
         }
-
+        
+        logging.info("file details extracted")
         return file_details
 
     def _extract_and_validate_fields(self, verified_input):
