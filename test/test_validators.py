@@ -128,7 +128,6 @@ class TestExceptionsForLoadAndValidateJSON:
         assert "pii_fields must contain a list" in caplog.text
 
 
-
 class TestExceptionsForExtractAndValidateFileDetails:
     def test_ValueError_raised_if_URL_is_empty_string(self, caplog):
         caplog.set_level(logging.ERROR)
@@ -149,7 +148,7 @@ class TestExceptionsForExtractAndValidateFileDetails:
             )
         assert "URL does not contain permitted file location" in caplog.text
 
-    def test_url_raises_and_logs_error_invalid_file_type(self, caplog):
+    def test_ValueError_raised_if_file_type_not_indicated(self, caplog):
         caplog.set_level(logging.ERROR)
         with pytest.raises(ValueError):
             # no file extension
@@ -159,21 +158,37 @@ class TestExceptionsForExtractAndValidateFileDetails:
             )
         assert "unable to confirm file type" in caplog.text
 
-#     def test_raises_and_logs_error_if_not_accepted_file_type(self, caplog):
-#         caplog.set_level(logging.ERROR)
-#         file_path = "s3://test_bucket_TR_NC/test_file.pdf"
-#         with pytest.raises(ValueError):
-#             extract_file_location_details(
-#                 {
-#                     "file_to_obfuscate": file_path,
-#                     "pii_fields": ["Name", "Email", "Phone", "DOB"],
-#                 }
-#             )
-#         assert "unable to process pdf files" in caplog.text
+    def test_ValueError_raised_if_not_accepted_file_type(self, caplog):
+        caplog.set_level(logging.ERROR)
+        #pdf not accepted file type
+        with pytest.raises(ValueError):
+            ObfuscationRequest(
+                '{"file_to_obfuscate": "s3://test_bucket_TR_NC/test_file.pdf",'
+                '"pii_fields": ["Name", "Email", "Phone", "DOB"]}'
+            )
+        assert "unable to process pdf files" in caplog.text
+
 
 class TestExceptionsForExtractAndValidateFields:
-    pass
+    def test_ValueError_raised_if_fields_list_empty(self, caplog):
+        caplog.set_level(logging.ERROR)
+        #empty list
+        with pytest.raises(ValueError):
+            ObfuscationRequest(
+                '{"file_to_obfuscate": "s3://test_bucket_TR_NC/test_file.csv",'
+                '"pii_fields": []}'
+            )
+        assert "no fields to obfuscate provided" in caplog.text
 
-    # check you have tests for 
-    #invalid s3 URL 
-    #invalid pii fields
+    def test_TypeError_raised_if_fields_not_strings(self, caplog):
+        caplog.set_level(logging.ERROR)
+        #int not str
+        with pytest.raises(TypeError):
+            ObfuscationRequest(
+                '{"file_to_obfuscate": "s3://test_bucket_TR_NC/test_file.csv",'
+                '"pii_fields": [1, 2, 3, "pii_fields"]}'
+            )
+        expected_msg = "The headings : [1, 2, 3] are not strings"
+        assert expected_msg in caplog.text
+
+
